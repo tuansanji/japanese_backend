@@ -3,13 +3,14 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const dotenv = require("dotenv");
 const cookieParser = require("cookie-parser");
+const history = require("connect-history-api-fallback");
 
 const authRoutes = require("./routes/auth");
 const userRoutes = require("./routes/user");
 const courseRoutes = require("./routes/courses");
 
 const app = express();
-const port = 5002;
+const port = 5003;
 
 dotenv.config();
 
@@ -28,7 +29,12 @@ mongoose
   .catch((err) => {
     console.error(`connection error: ${err}`);
   });
-
+app.use(
+  history({
+    verbose: true,
+    // options
+  })
+);
 app.use("/auth", authRoutes);
 app.use("/user", userRoutes);
 app.use("/courses", courseRoutes);
