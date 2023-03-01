@@ -1,7 +1,7 @@
 const User = require(".././model/User");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
-
+const cookie = require("cookie");
 // Chưa có data base nên làm tạm bằng arr. nên học REDIS để làm cái này
 let refreshTokenDB = [];
 
@@ -25,7 +25,7 @@ const authController = {
     return jwt.sign(
       { id: user.id, admin: user.isAdmin },
       process.env.JWT_ACCESS_TOKEN,
-      { expiresIn: "2h" }
+      { expiresIn: "10s" }
     );
   },
   generateRefreshToken: (user) => {
@@ -50,16 +50,17 @@ const authController = {
         return res.status(404).send("wrong password");
       }
       if (user && validatedPassword) {
-        const accessToken = await authController.generateAccessToken(user);
-        const refreshToken = await authController.generateRefreshToken(user);
-        refreshTokenDB.push(refreshToken);
-        await res.cookie("refreshToken", refreshToken, {
-          path: "/",
-          httpOnly: true,
-          sameSite: "strict",
-          secure: false,
-        });
+        const accessToken = authController.generateAccessToken(user);
+        const refreshToken = authController.generateRefreshToken(user);
 
+        refreshTokenDB.push(refreshToken);
+
+        res.cookie("refreshtoken", refreshToken, {
+          httpOnly: true,
+          secure: false,
+          path: "/",
+          sameSite: "strict",
+        });
         const { password, ...other } = user._doc;
         return res.status(200).send({ ...other, accessToken });
       }
@@ -68,7 +69,11 @@ const authController = {
     }
   },
   requestRefreshToken: (req, res) => {
-    const refreshToken = req.cookies.refreshToken;
+    const refreshToken = req.cookies.refreshtoken;
+
+    if (!refreshToken)
+      return res.status(401).json("You're not authenticated một hai");
+
     if (!refreshTokenDB.includes(refreshToken)) {
       res.status(401).json("token is not in the refresh token");
     }
@@ -81,7 +86,7 @@ const authController = {
       const newAccessToken = authController.generateAccessToken(user);
       const newRefreshToken = authController.generateRefreshToken(user);
       refreshTokenDB.push(newRefreshToken);
-      res.cookie("refreshToken", newRefreshToken, {
+      res.cookie("refreshtoken", newRefreshToken, {
         path: "/",
         secure: false,
         sameSite: "strict",
@@ -92,10 +97,10 @@ const authController = {
   },
   logOutUser: (req, res) => {
     try {
-      res.clearCookie("refreshToken");
       refreshTokenDB = refreshTokenDB.filter(
-        (token) => token != req.cookies.refreshToken
+        (token) => token !== req.cookies.refreshtoken
       );
+      res.clearCookie("refreshtoken");
       res.status(200).send("log out successfully");
     } catch (error) {
       console.log(error.message);

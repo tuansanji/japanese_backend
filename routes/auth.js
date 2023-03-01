@@ -7,7 +7,7 @@ routes.post("/register", authController.registerUser);
 routes.post("/login", authController.loginUser);
 routes.post(
   "/refresh",
-  middlewareController.verifyToken,
+  // middlewareController.verifyToken,
   authController.requestRefreshToken
 );
 routes.post(

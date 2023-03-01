@@ -4,19 +4,17 @@ const cors = require("cors");
 const dotenv = require("dotenv");
 const cookieParser = require("cookie-parser");
 const history = require("connect-history-api-fallback");
+const session = require("express-session");
 
 const authRoutes = require("./routes/auth");
 const userRoutes = require("./routes/user");
 const courseRoutes = require("./routes/courses");
 
 const app = express();
-const port = 5003;
+const port = 5002;
 
 dotenv.config();
 
-app.use(express.json());
-app.use(cors());
-app.use(cookieParser());
 mongoose.set("strictQuery", false);
 mongoose
   .connect(process.env.MONGODB_URL, {
@@ -29,10 +27,19 @@ mongoose
   .catch((err) => {
     console.error(`connection error: ${err}`);
   });
+// app.use(
+//   history({
+//     verbose: true,
+//     // options
+//   })
+// );
+app.use(express.json());
+app.use(cookieParser());
 app.use(
-  history({
-    verbose: true,
-    // options
+  cors({
+    origin: "http://localhost:3000",
+    methods: "GET,PUT,POST,DELETE",
+    credentials: true,
   })
 );
 app.use("/auth", authRoutes);
