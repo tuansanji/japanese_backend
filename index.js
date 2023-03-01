@@ -37,7 +37,7 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: ["http://localhost:3000", "https://janpanese-fontend.onrender.com"],
     methods: "GET,PUT,POST,DELETE",
     credentials: true,
   })
