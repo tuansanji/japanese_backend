@@ -5,13 +5,25 @@ const routes = require("express").Router();
 
 routes.get(
   "/all",
-  middlewareController.verifyToken,
+  middlewareController.verifyTokenAndAdminAuth,
   userController.getAllUsers
 );
-routes.delete(
-  "/delete/:id",
+routes.post(
+  "/delete",
   middlewareController.verifyTokenAndAdminAuth,
   userController.deleteUser
 );
+routes.post(
+  "/delete/many",
+  middlewareController.verifyTokenAndAdminAuth,
+  userController.deleteManyUsers
+);
+routes.patch(
+  "/edit",
+  middlewareController.verifyTokenAndAdminAuth,
+  userController.editUser
+);
+routes.post("/forgot-password", userController.forgotPassWord);
+routes.get("/change-password/:token", userController.changePassword);
 
 module.exports = routes;

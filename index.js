@@ -3,12 +3,13 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const dotenv = require("dotenv");
 const cookieParser = require("cookie-parser");
-const history = require("connect-history-api-fallback");
-const session = require("express-session");
+const passport = require("passport");
 
 const authRoutes = require("./routes/auth");
 const userRoutes = require("./routes/user");
 const courseRoutes = require("./routes/courses");
+const session = require("express-session");
+require("./authGmail");
 
 const app = express();
 const port = 5002;
@@ -27,21 +28,33 @@ mongoose
   .catch((err) => {
     console.error(`connection error: ${err}`);
   });
-// app.use(
-//   history({
-//     verbose: true,
-//     // options
-//   })
-// );
+
 app.use(express.json());
 app.use(cookieParser());
 app.use(
   cors({
-    origin: ["http://localhost:3000", "https://janpanese-fontend.onrender.com"],
-    methods: "GET,PUT,POST,DELETE",
+    origin: [
+      "http://localhost:3000",
+      "http://localhost:5002",
+      "https://janpanese-fontend.onrender.com",
+    ],
+    methods: "GET,PUT,POST,DELETE,PATCH",
     credentials: true,
   })
 );
+
+app.use(
+  session({
+    secret: "minhtuan",
+    resave: false,
+    saveUninitialized: true,
+  })
+);
+
+// Khởi tạo passport middleware
+app.use(passport.initialize());
+app.use(passport.session());
+
 app.use("/auth", authRoutes);
 app.use("/user", userRoutes);
 app.use("/courses", courseRoutes);

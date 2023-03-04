@@ -25,7 +25,7 @@ const authController = {
     return jwt.sign(
       { id: user.id, admin: user.isAdmin },
       process.env.JWT_ACCESS_TOKEN,
-      { expiresIn: "10s" }
+      { expiresIn: "10h" }
     );
   },
   generateRefreshToken: (user) => {
@@ -101,10 +101,14 @@ const authController = {
         (token) => token !== req.cookies.refreshtoken
       );
       res.clearCookie("refreshtoken");
+
       res.status(200).send("log out successfully");
     } catch (error) {
       console.log(error.message);
     }
+  },
+  editUser: async (req, res) => {
+    const user = await User.findOne({ username: req.body.username });
   },
 };
 

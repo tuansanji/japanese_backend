@@ -1,26 +1,16 @@
 const mongoose = require("mongoose");
 
-const userSchema = new mongoose.Schema(
+const userGmailSchema = new mongoose.Schema(
   {
-    username: {
-      type: String,
-      require: true,
-      min: 3,
-      max: 20,
-      unique: true,
-    },
+    username: String,
+
     email: {
       type: String,
       required: true,
       unique: true,
     },
-    password: {
-      type: String,
-      required: true,
-      min: 6,
-    },
     thumb: {
-      type: Buffer,
+      type: String,
       default:
         "https://scr.vn/wp-content/uploads/2020/07/Avatar-Facebook-tr%E1%BA%AFng.jpg",
     },
@@ -34,11 +24,10 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    isVerified: { type: Boolean, default: false },
   },
   {
     timestamps: true,
   }
 );
 
-module.exports = mongoose.model("User", userSchema);
+module.exports = mongoose.model("UserGmail", userGmailSchema);
