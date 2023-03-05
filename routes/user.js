@@ -25,5 +25,6 @@ routes.patch(
 );
 routes.post("/forgot-password", userController.forgotPassWord);
 routes.get("/change-password/:token", userController.changePassword);
+routes.patch("/confirm-password/:token", userController.confirmPasswordChange);
 
 module.exports = routes;

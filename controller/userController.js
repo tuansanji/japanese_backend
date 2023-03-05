@@ -51,7 +51,7 @@ const userController = {
 
       const token = crypto.randomBytes(20).toString("hex");
       user.resetPasswordToken = token;
-      // user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
+      user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
 
       await user.save();
 
@@ -67,7 +67,7 @@ const userController = {
         from: process.env.ACCOUNT_GMAIL,
         to: email,
         subject: "Yêu cầu đặt lại mật khẩu",
-        text: `Xin chào ${user.name}! Bạn nhận được email này vì bạn (hoặc ai đó) đã yêu cầu đặt lại mật khẩu cho tài khoản của mình.\n\n
+        text: `Xin chào ${user.username}! Bạn nhận được email này vì bạn (hoặc ai đó) đã yêu cầu đặt lại mật khẩu cho tài khoản của mình.\n\n
         Vui lòng nhấp vào liên kết sau hoặc dán liên kết này vào trình duyệt của bạn để hoàn tất quy trình:\n\n
         http://${req.headers.host}/user/change-password/${token}\n\n
         Nếu bạn không yêu cầu điều này, vui lòng bỏ qua email này và mật khẩu của bạn sẽ không thay đổi.`,
@@ -102,6 +102,61 @@ const userController = {
       // Render the password reset form
       // res.render("reset-password", { token });
       res.redirect(`http://localhost:3000/user/change-password/${token}`);
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  },
+
+  changePassword: async (req, res) => {
+    try {
+      const token = req.params.token;
+
+      const user = await User.findOne({
+        resetPasswordToken: token,
+        resetPasswordExpires: { $gt: Date.now() },
+      });
+
+      if (!user) {
+        return res
+          .status(400)
+          .json({ message: "Password reset token is invalid or has expired" });
+      }
+
+      // Render the password reset form
+      // res.render("reset-password", { token });
+      res.redirect(`http://localhost:3000/user/change-password/${token}`);
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  },
+  confirmPasswordChange: async (req, res) => {
+    try {
+      const token = req.params.token;
+
+      const user = await User.findOne({
+        resetPasswordToken: token,
+        resetPasswordExpires: { $gt: Date.now() },
+      });
+
+      if (!user) {
+        return res
+          .status(400)
+          .json({ message: "Password reset token is invalid or has expired" });
+      }
+      const { password } = req.body;
+
+      if (!password) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+      user.password = password;
+      user.resetPasswordToken = undefined;
+      user.resetPasswordExpires = undefined;
+
+      await user.save();
+
+      return res.status(200).json({ message: "Password changed successfully" });
     } catch (error) {
       console.log(error);
       return res.status(500).json({ message: "Internal server error" });
