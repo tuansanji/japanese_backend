@@ -12,9 +12,10 @@ const coursesController = {
         level: req.body.level,
         author: req.body.author,
         pathVideo: req.body.pathVideo,
+        pdf: req.body.pdf,
       });
       const course = await newCourse.save();
-      res.status(200).send(course);
+      res.status(200).send("post successfully created");
     } catch (error) {
       res.status(500).send("post failed");
     }

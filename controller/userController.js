@@ -1,7 +1,7 @@
 const User = require(".././model/User");
 const crypto = require("crypto");
 const nodemailer = require("nodemailer");
-
+const bcrypt = require("bcrypt");
 const userController = {
   getAllUsers: async (req, res) => {
     try {
@@ -101,7 +101,9 @@ const userController = {
 
       // Render the password reset form
       // res.render("reset-password", { token });
-      res.redirect(`http://localhost:3000/user/change-password/${token}`);
+      res.redirect(
+        `${process.env.LOCALHOST_URL}/user/change-password/${token}`
+      );
     } catch (error) {
       console.log(error);
       return res.status(500).json({ message: "Internal server error" });
@@ -150,7 +152,10 @@ const userController = {
       if (!password) {
         return res.status(400).json({ message: "Missing required fields" });
       }
-      user.password = password;
+      const salt = await bcrypt.genSalt(10);
+      const hash = await bcrypt.hash(password, salt);
+
+      user.password = hash;
       user.resetPasswordToken = undefined;
       user.resetPasswordExpires = undefined;
 

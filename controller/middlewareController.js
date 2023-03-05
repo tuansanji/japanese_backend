@@ -25,7 +25,7 @@ const middlewareController = {
       if (req.user.id == req.body.id || req.user.admin) {
         next();
       } else {
-        res.status(401).json("you are not allowed to delete other");
+        res.status(401).json("you are not admin or you are not authenticated");
       }
     });
   },

@@ -8,6 +8,16 @@ let refreshTokenDB = [];
 const authController = {
   registerUser: async (req, res) => {
     try {
+      const userNameValidate = await User.findOne({
+        username: req.body.username,
+      });
+      if (userNameValidate) {
+        return res.status(403).send("Tên đăng nhập đã tồn tại");
+      }
+      const emailValidate = await User.findOne({ email: req.body.email });
+      if (emailValidate) {
+        return res.status(403).send("Email đã tồn tại");
+      }
       const salt = await bcrypt.genSalt(10);
       const hashed = await bcrypt.hash(req.body.password, salt);
       const newUser = await new User({
