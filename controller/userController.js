@@ -14,7 +14,7 @@ const userController = {
   deleteUser: async (req, res) => {
     try {
       const user = await User.findByIdAndDelete(req.body.id);
-      res.status(200).json(req.body.id);
+      res.status(200).send("delete  users successfully");
     } catch (error) {
       res.status(500).json({ message: error.message });
     }
@@ -23,7 +23,7 @@ const userController = {
     try {
       const users = await User.deleteMany({ _id: { $in: req.body.arr } });
 
-      res.status(200).json(users);
+      res.status(200).send("delete many users successfully");
     } catch (error) {
       res.status(500).json({ message: error.message });
     }

@@ -7,6 +7,21 @@ routes.post(
   middlewareController.verifyTokenAndAdminAuth,
   coursesController.postCourse
 );
+routes.post(
+  "/delete",
+  middlewareController.verifyTokenAndAdminAuth,
+  coursesController.deleteCourse
+);
+routes.post(
+  "/delete/many",
+  middlewareController.verifyTokenAndAdminAuth,
+  coursesController.deleteManyCourse
+);
+routes.patch(
+  "/edit",
+  middlewareController.verifyTokenAndAdminAuth,
+  coursesController.editCourse
+);
 routes.get(
   "/",
   middlewareController.verifyTokenAndAdminAuth,

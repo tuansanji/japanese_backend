@@ -12,6 +12,8 @@ const courseSchema = new mongoose.Schema(
     level: String,
     author: String,
     pathVideo: String,
+    pdf: String,
+    desc: String,
     thumb: String,
     timeLine: Number,
   },

@@ -13,11 +13,48 @@ const coursesController = {
         author: req.body.author,
         pathVideo: req.body.pathVideo,
         pdf: req.body.pdf,
+        desc: req.body.desc,
       });
+      console.log(newCourse);
+
       const course = await newCourse.save();
       res.status(200).send("post successfully created");
     } catch (error) {
       res.status(500).send("post failed");
+    }
+  },
+  deleteCourse: async (req, res) => {
+    try {
+      const course = await Course.findByIdAndDelete(req.body.id);
+      res.status(200).send("delete successfully");
+    } catch (error) {
+      res.status(500).send("delete failed");
+    }
+  },
+  deleteManyCourse: async (req, res) => {
+    try {
+      const course = await Course.deleteMany({ _id: { $in: req.body.arr } });
+      res.status(200).send("delete many successfully");
+    } catch (error) {
+      res.status(500).send("delete many failed");
+    }
+  },
+  editCourse: async (req, res) => {
+    try {
+      const course = await Course.findByIdAndUpdate(req.body.id, {
+        name: req.body.name,
+        lesson: req.body.lesson,
+        stage: req.body.stage,
+        way: req.body.way,
+        level: req.body.level,
+        pathVideo: req.body.pathVideo,
+        pdf: req.body.pdf,
+        desc: req.body.desc,
+        author: req.body.author,
+      });
+      res.status(200).send("edit successfully updated");
+    } catch (error) {
+      res.status(500).send("edit failed");
     }
   },
   getCourseAll: async (req, res) => {
