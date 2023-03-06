@@ -35,7 +35,7 @@ const authController = {
     return jwt.sign(
       { id: user.id, admin: user.isAdmin },
       process.env.JWT_ACCESS_TOKEN,
-      { expiresIn: "10h" }
+      { expiresIn: "10d" }
     );
   },
   generateRefreshToken: (user) => {

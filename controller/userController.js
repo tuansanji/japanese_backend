@@ -110,29 +110,6 @@ const userController = {
     }
   },
 
-  changePassword: async (req, res) => {
-    try {
-      const token = req.params.token;
-
-      const user = await User.findOne({
-        resetPasswordToken: token,
-        resetPasswordExpires: { $gt: Date.now() },
-      });
-
-      if (!user) {
-        return res
-          .status(400)
-          .json({ message: "Password reset token is invalid or has expired" });
-      }
-
-      // Render the password reset form
-      // res.render("reset-password", { token });
-      res.redirect(`http://localhost:3000/user/change-password/${token}`);
-    } catch (error) {
-      console.log(error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  },
   confirmPasswordChange: async (req, res) => {
     try {
       const token = req.params.token;
