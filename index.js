@@ -4,6 +4,7 @@ const cors = require("cors");
 const dotenv = require("dotenv");
 const cookieParser = require("cookie-parser");
 const passport = require("passport");
+const path = require("path");
 
 const authRoutes = require("./routes/auth");
 const userRoutes = require("./routes/user");
@@ -13,7 +14,11 @@ require("./authGmail");
 
 const app = express();
 const port = 5002;
-
+// Serve static files from the "public" directory in the frontend
+// app.use(express.static(path.join(__dirname, '../frontend/public')));
+// app.get('/', (req, res) => {
+//   res.sendFile(path.join(__dirname, '../frontend/public/index.html'));
+// });
 dotenv.config();
 
 mongoose.set("strictQuery", false);
