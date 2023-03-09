@@ -14,6 +14,7 @@ const coursesController = {
         pathVideo: req.body.pathVideo,
         pdf: req.body.pdf,
         desc: req.body.desc,
+        audio: req.body.audio,
       });
       console.log(newCourse);
 
@@ -51,6 +52,7 @@ const coursesController = {
         pdf: req.body.pdf,
         desc: req.body.desc,
         author: req.body.author,
+        audio: req.body.audio,
       });
       res.status(200).send("edit successfully updated");
     } catch (error) {

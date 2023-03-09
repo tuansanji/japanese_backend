@@ -13,6 +13,7 @@ const courseSchema = new mongoose.Schema(
     author: String,
     pathVideo: String,
     pdf: String,
+    audio: String,
     desc: String,
     thumb: String,
     timeLine: Number,
