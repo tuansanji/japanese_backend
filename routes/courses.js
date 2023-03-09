@@ -7,6 +7,7 @@ routes.post(
   middlewareController.verifyTokenAndAdminAuth,
   coursesController.postCourse
 );
+routes.post("/timeLine", coursesController.addTimeLine);
 routes.post(
   "/delete",
   middlewareController.verifyTokenAndAdminAuth,

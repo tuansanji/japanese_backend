@@ -24,6 +24,19 @@ const coursesController = {
       res.status(500).send("post failed");
     }
   },
+
+  // thên thời gian của video
+  addTimeLine: async (req, res) => {
+    try {
+      const course = await Course.findById(req.body.id);
+      course.timeLine = req.body.timeLine;
+      course.save();
+      res.status(200).send("add timeLine successfully ");
+    } catch (error) {
+      res.status(500).send("add timeline error");
+    }
+  },
+
   deleteCourse: async (req, res) => {
     try {
       const course = await Course.findByIdAndDelete(req.body.id);
