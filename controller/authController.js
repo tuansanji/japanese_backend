@@ -121,5 +121,5 @@ const authController = {
     const user = await User.findOne({ username: req.body.username });
   },
 };
-
+//fix lỗi up
 module.exports = authController;
