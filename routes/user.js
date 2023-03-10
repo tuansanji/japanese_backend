@@ -5,6 +5,7 @@ const routes = require("express").Router();
 
 routes.get(
   "/all",
+
   middlewareController.verifyTokenAndAdminAuth,
   userController.getAllUsers
 );

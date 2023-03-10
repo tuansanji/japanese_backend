@@ -2,8 +2,8 @@ const User = require(".././model/User");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const cookie = require("cookie");
-// Chưa có data base nên làm tạm bằng arr. nên học REDIS để làm cái này
-let refreshTokenDB = [];
+const redis = require("redis");
+const redisClient = require("../service/redisController");
 
 const authController = {
   registerUser: async (req, res) => {
@@ -33,14 +33,14 @@ const authController = {
   },
   generateAccessToken: (user) => {
     return jwt.sign(
-      { id: user.id, admin: user.isAdmin },
+      { id: user.id, isAdmin: user.isAdmin },
       process.env.JWT_ACCESS_TOKEN,
-      { expiresIn: "10d" }
+      { expiresIn: "2h" }
     );
   },
   generateRefreshToken: (user) => {
     return jwt.sign(
-      { id: user.id, admin: user.isAdmin },
+      { id: user.id, isAdmin: user.isAdmin },
       process.env.JWT_REFRESH_TOKEN,
       { expiresIn: "365d" }
     );
@@ -63,7 +63,20 @@ const authController = {
         const accessToken = authController.generateAccessToken(user);
         const refreshToken = authController.generateRefreshToken(user);
 
-        refreshTokenDB.push(refreshToken);
+        // refreshTokenDB.push(refreshToken);
+        redisClient.RPUSH(
+          "refreshTokenDB",
+          JSON.stringify(refreshToken),
+          (err, reply) => {
+            if (err) {
+              console.error(err);
+            } else {
+              console.log(
+                `Added refreshToken to refreshTokenDB array. New length: ${reply}`
+              );
+            }
+          }
+        );
 
         res.cookie("refreshtoken", refreshToken, {
           httpOnly: true,
@@ -71,7 +84,7 @@ const authController = {
           path: "/",
           sameSite: "strict",
         });
-        const { password, ...other } = user._doc;
+        const { password, thumb, ...other } = user._doc;
         return res.status(200).send({ ...other, accessToken });
       }
     } catch (error) {
@@ -81,35 +94,85 @@ const authController = {
   requestRefreshToken: (req, res) => {
     const refreshToken = req.cookies.refreshtoken;
 
-    if (!refreshToken)
-      return res.status(401).json("You're not authenticated một hai");
-
-    if (!refreshTokenDB.includes(refreshToken)) {
-      res.status(401).json("token is not in the refresh token");
+    if (!refreshToken) {
+      return res.status(401).send("You're not authenticated một hai");
     }
+    // xem token đó có tồn tài trong db hay không
+    redisClient.LRANGE("refreshTokenDB", 0, -1, (err, tokens) => {
+      if (err) {
+        console.error(err);
+      } else {
+        const refreshTokenExists = tokens.some(
+          (token) => token === JSON.stringify(refreshToken)
+        );
+        if (!refreshTokenExists) {
+          return res.status(401).send("token is not in the refresh token");
+        }
+      }
+    });
+
     jwt.verify(refreshToken, process.env.JWT_REFRESH_TOKEN, (err, user) => {
       if (err) {
         console.log(err);
         return;
       }
-      refreshTokenDB = refreshTokenDB.filter((token) => token !== refreshToken);
+      // xóa refreshtoken đó tron db
+      redisClient.LREM(
+        "refreshTokenDB",
+        0,
+        JSON.stringify(refreshToken),
+        (err, reply) => {
+          if (err) {
+            console.error(err);
+          } else {
+            console.log(
+              `Removed ${reply} instances of refreshToken from refreshTokenDB`
+            );
+          }
+        }
+      );
       const newAccessToken = authController.generateAccessToken(user);
       const newRefreshToken = authController.generateRefreshToken(user);
-      refreshTokenDB.push(newRefreshToken);
+
+      redisClient.RPUSH(
+        "refreshTokenDB",
+        JSON.stringify(newRefreshToken),
+        (err, reply) => {
+          if (err) {
+            console.error(err);
+          } else {
+            console.log(
+              `Added refreshToken to refreshTokenDB array. New length: ${reply}`
+            );
+          }
+        }
+      );
       res.cookie("refreshtoken", newRefreshToken, {
         path: "/",
         secure: false,
         sameSite: "strict",
         httpOnly: true,
       });
-      res.status(200).send({ accessToken: newAccessToken });
+      return res.status(200).send({ accessToken: newAccessToken });
     });
   },
   logOutUser: (req, res) => {
     try {
-      refreshTokenDB = refreshTokenDB.filter(
-        (token) => token !== req.cookies.refreshtoken
+      redisClient.LREM(
+        "refreshTokenDB",
+        0,
+        JSON.stringify(req.cookies.refreshtoken),
+        (err, reply) => {
+          if (err) {
+            console.error(err);
+          } else {
+            console.log(
+              `Removed ${reply} instances of refreshToken from refreshTokenDB`
+            );
+          }
+        }
       );
+
       res.clearCookie("refreshtoken");
 
       res.status(200).send("log out successfully");
@@ -121,5 +184,5 @@ const authController = {
     const user = await User.findOne({ username: req.body.username });
   },
 };
-//fix lỗi up
+
 module.exports = authController;

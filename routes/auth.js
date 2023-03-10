@@ -1,16 +1,10 @@
+const routes = require("express").Router();
+const multer = require("multer");
 const authController = require("../controller/authController");
 const middlewareController = require("../controller/middlewareController");
+const editUserController = require("../controller/editUserController");
+const authGmailController = require("../controller/authGmail");
 
-const multer = require("multer");
-const routes = require("express").Router();
-const passport = require("passport");
-const session = require("express-session");
-const path = require("path");
-const fs = require("fs");
-const User = require("../model/User");
-passport.serializeUser((user, done) => {
-  done(null, user);
-});
 routes.post("/register", authController.registerUser);
 routes.post("/login", authController.loginUser);
 routes.post(
@@ -23,50 +17,19 @@ routes.post(
   middlewareController.verifyToken,
   authController.logOutUser
 );
-// Thiết lập router cho đăng nhập Google
-
-routes.get(
-  "/google",
-  passport.authenticate("google", { scope: ["profile", "email"] })
-);
-
+routes.get("/google", authGmailController.start);
 routes.get(
   "/google/callback",
-  passport.authenticate("google", {
-    failureRedirect: "http://localhost:3000/auth/login",
-  }),
-  (req, res) => {
-    const user = req.user;
-    console.log(user);
-    res.redirect("http://localhost:3000");
-  }
+  authGmailController.callback,
+  authGmailController.callbackSuccess
 );
-
-routes.get("/user/api", (req, res) => {
-  const user = req.user;
-  if (!user) {
-    res.status(401).json({ error: "Unauthorized" });
-  } else {
-    res.json(user);
-  }
-  // if (req.isAuthenticated()) {
-  //   res.send(req.user);
-  // } else {
-  //   res.status(401).send("User not authenticated");
-  // }
-});
-
-routes.get("/gmail/logout", (req, res) => {
-  try {
-    req.logout(); // xóa thông tin người dùng khỏi session
-    req.session.destroy(); // xóa session
-    res.clearCookie("connect.sid"); // xóa cookie
-    res.sendStatus(200);
-  } catch (error) {
-    console.log("log out error");
-  }
-});
-
+routes.get(
+  "/user/api",
+  middlewareController.verifyToken,
+  authGmailController.getUser
+);
+routes.get("/gmail/logout", authGmailController.logOut);
+//phần thay hình đại diện
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, "uploads/");
@@ -82,18 +45,16 @@ const storage = multer.diskStorage({
     cb(null, true);
   },
   limits: {
-    fileSize: 1000000, // Giới hạn kích thước file ảnh là 1MB
+    fileSize: 1000000,
   },
-  // Giới hạn kích thước và chất lượng của ảnh tải lên
-  // Thêm thuộc tính transformOptions với đối tượng sharp để thực hiện chuyển đổi ảnh
-  // https://github.com/lovell/sharp#resizing
+
   transformOptions: {
     // fit: sharp.fit.cover,
-    width: 500, // Giới hạn chiều rộng ảnh là 500px
-    height: 500, // Giới hạn chiều cao ảnh là 500px
-    withoutEnlargement: true, // Không cho phép phóng to ảnh để đạt được kích thước giới hạn
+    width: 500,
+    height: 500,
+    withoutEnlargement: true,
     jpeg: {
-      quality: 70, // Chất lượng ảnh JPEG là 70%
+      quality: 70,
     },
   },
 });
@@ -101,7 +62,7 @@ const storage = multer.diskStorage({
 const upload = multer({
   storage: storage,
   limits: {
-    fileSize: 1000000, // Giới hạn kích thước file ảnh là 1MB
+    fileSize: 1000000,
   },
   // fileFilter(req, file, cb) {
   //   if (!file.originalname.match(/\.(jpg|jpeg|png)$/)) {
@@ -110,36 +71,11 @@ const upload = multer({
   //   cb(undefined, true);
   // },
 });
-
 routes.post(
   "/user/edit",
   middlewareController.verifyToken,
   upload.single("avatar"),
-  async (req, res) => {
-    try {
-      const user = req.user; // Lấy thông tin user từ access token
-      const filePath = req.file.path;
-      const fileContent = fs.readFileSync(filePath);
-      const newUser = await User.findById(user.id);
-      newUser.thumb = fileContent; // Lưu trữ dữ liệu ảnh dưới dạng binary
-
-      await newUser.save();
-      // Lưu thông tin user vào MongoDB
-      fs.unlinkSync(filePath); // Xóa file upload sau khi lưu trữ dữ liệu
-      res.status(200).send("Thay ảnh đại diện thành công");
-    } catch (error) {
-      res.status(500).send("Có lỗi xảy ra. Vui lòng thử lại");
-    }
-  }
+  editUserController.editImage
 );
-routes.get("/user/avatar/:userId", (req, res) => {
-  const userId = req.params.userId;
-  User.findById(userId, (err, user) => {
-    if (err) {
-      return res.status(500).send(err);
-    }
-    res.set("Content-Type", "image/png"); // Đặt kiểu MIME của dữ liệu trả về là hình ảnh PNG
-    res.send(user.thumb); // Trả về dữ liệu ảnh binary
-  });
-});
+routes.get("/user/avatar/:userId", editUserController.getImage);
 module.exports = routes;

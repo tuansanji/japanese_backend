@@ -5,13 +5,14 @@ const dotenv = require("dotenv");
 const cookieParser = require("cookie-parser");
 const passport = require("passport");
 const path = require("path");
+const redis = require("redis");
 
 const authRoutes = require("./routes/auth");
 const userRoutes = require("./routes/user");
 const courseRoutes = require("./routes/courses");
 const session = require("express-session");
-require("./authGmail");
-
+require("./controller/authGmail");
+// require("./controller/redisController");
 const app = express();
 const port = 5002;
 // Serve static files from the "public" directory in the frontend
